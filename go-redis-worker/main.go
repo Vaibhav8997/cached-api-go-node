@@ -46,11 +46,11 @@ func main() {
 		}
 		//convert json string into struct
 		var user UserData
-		json.Unmarshal([]byte(result[1]), &user)
-		// if err != nil {
-		// 	fmt.Println("Incorrect JSON: ", err)
-		// 	continue
-		// }
+		err = json.Unmarshal([]byte(result[1]), &user)
+		if err != nil {
+			fmt.Println("Incorrect JSON: ", err)
+			continue
+		}
 
 		//insert data into postgres
 		query := "INSERT INTO test_data(id, name, email) VALUES($1, $2, $3)"
