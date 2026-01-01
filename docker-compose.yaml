@@ -1,11 +1,35 @@
-version: '3.9'
+version: "3.9"
 
 services:
   postgres:
-    image: postgres:14
+    image: postgres:15
+    container_name: postgres
     environment:
-      postgres_user: postgres
-      postgres_password: 123456
-      postgres_db: testDb
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: testDb
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
+    
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+     - "6379:6379" 
+
+  node-api:
+    build: ./node-api
+    container_name: node_api
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - "4000:3000"
+
+  go-redis-worker:
+    build: ./go-redis-worker
+    container_name: go-redis-worker
+    depends_on:
+      - redis

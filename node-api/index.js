@@ -2,6 +2,8 @@ const express = require("express");  //express tool to create APIs in NodeJS
 
 const { Pool } = require("pg");  //pg library to intrect with postgres database
 
+const Redis = require("ioredis"); //redis library
+
 const app = express();
 app.use(express.json());   //to interect with server using json 
 
@@ -11,23 +13,24 @@ const pool = new Pool({
     password: "123456",
     database: "testDb",
     port: 5432
-})
+});
+
+const redis = new Redis({
+    host:"redis", port:6379
+});
 
 //POST method-- data insertion
 app.post("/data", async (req, res) => {
     const { id, name, email } = req.body;
 
     try {
-        await pool.query(
-            "INSERT INTO test_data(id, name, email) VALUES($1, $2, $3)",
-            [id, name, email]
-        );
-        res.status(201).json({ message: "Data inserted" });
+        // converted data into json string and inserted in user_queue
+        const task = JSON.stringify({ id, name, email });
+        await redis.lpush("user_queue", task); 
+        
+        res.status(201).json({ message: "Data received and queued!" });
     } catch(err) {
-        iff (err.code === "23505") {
-            return res.status(409).json({ error: "Id Already exists"});
-        }
-        res.status(500).json({ error: "DB Error"});
+        res.status(500).json({ error: "Redis Error" });
     }
 });
 
